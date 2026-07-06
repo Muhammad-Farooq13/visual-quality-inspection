@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "visual-quality-inspection"
+version = "1.0.0"
+description = "Classical computer-vision (HOG+LBP) defect classifier for manufacturing surface inspection, with statistical anomaly-map localization and FastAPI serving."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [
+    { name = "Muhammad Farooq Shafi", email = "mfarooqsgafee333@gmail.com" }
+]
+keywords = ["computer-vision", "defect-detection", "hog", "manufacturing-qa", "fastapi", "scikit-learn"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short"
+
+[tool.black]
+line-length = 100
+target-version = ["py311", "py312"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]

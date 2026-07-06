@@ -1,0 +1,20 @@
+version: "3.9"
+
+services:
+  inspection-api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: visual-quality-inspection-api:latest
+    container_name: visual-quality-inspection-api
+    ports:
+      - "8002:8002"
+    environment:
+      - PYTHONUNBUFFERED=1
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8002/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped

@@ -1,0 +1,64 @@
+# =============================================================================
+# Visual Quality Inspection - Central Configuration
+# =============================================================================
+
+project:
+  name: "visual-quality-inspection"
+  version: "1.0.0"
+  seed: 42
+
+data:
+  image_size: 128            # square images, pixels
+  n_images_per_class: 600    # good vs defective, before defect-type split
+  synthetic_dir: "data/synthetic_images"
+  train_test_split: 0.8
+
+defect_types:
+  - name: "scratch"
+    weight: 0.30
+  - name: "dent"
+    weight: 0.25
+  - name: "discoloration"
+    weight: 0.25
+  - name: "crack"
+    weight: 0.20
+
+features:
+  hog:
+    orientations: 9
+    pixels_per_cell: [16, 16]
+    cells_per_block: [2, 2]
+  lbp:
+    n_points: 24
+    radius: 3
+    method: "uniform"
+
+model:
+  target: "is_defective"
+  algorithms:
+    - logistic_regression
+    - random_forest
+    - svm
+  primary_metric: "f1"
+  cv_folds: 5
+  random_forest:
+    n_estimators: [200]
+    max_depth: [12, 20]
+    min_samples_leaf: [2]
+  svm:
+    C: [1.0, 5.0]
+    kernel: ["rbf"]
+  logistic_regression:
+    C: [0.1, 1.0, 10.0]
+
+artifacts:
+  model_dir: "artifacts/models"
+  reports_dir: "artifacts/reports"
+  champion_model_path: "artifacts/models/champion_model.joblib"
+  scaler_path: "artifacts/models/feature_scaler.joblib"
+  metadata_path: "artifacts/models/model_metadata.json"
+
+api:
+  host: "0.0.0.0"
+  port: 8002
+  decision_threshold: 0.5

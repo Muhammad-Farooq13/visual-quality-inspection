@@ -1,0 +1,92 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+
+      - name: Install system dependencies (opencv-headless runtime libs)
+        run: sudo apt-get update && sudo apt-get install -y libglib2.0-0
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Lint with ruff
+        run: ruff check src/ tests/
+
+      - name: Check formatting with black
+        run: black --check src/ tests/
+
+      - name: Generate synthetic images
+        run: python -m src.data_generation.generate_images --config configs/config.yaml
+
+      - name: Build feature dataset
+        run: python -m src.features.build_dataset --config configs/config.yaml
+
+      - name: Train and select champion model
+        run: python -m src.models.train --config configs/config.yaml
+
+      - name: Run pytest with coverage
+        run: pytest tests/ -v --cov=src --cov-report=xml --cov-report=term-missing
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-${{ matrix.python-version }}
+          path: coverage.xml
+
+  docker-build:
+    runs-on: ubuntu-latest
+    needs: lint-and-test
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile
+          push: false
+          tags: visual-quality-inspection-api:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Smoke-test the container
+        run: |
+          docker run -d --name inspection-api-test -p 8002:8002 visual-quality-inspection-api:ci
+          for i in $(seq 1 15); do
+            if curl -sf http://localhost:8002/health; then
+              echo "API is healthy"
+              break
+            fi
+            echo "Waiting for API to be ready... ($i)"
+            sleep 2
+          done
+          curl -sf http://localhost:8002/health
+          curl -sf http://localhost:8002/model/info
+          docker logs inspection-api-test
+          docker stop inspection-api-test
