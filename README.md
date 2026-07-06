@@ -283,4 +283,4 @@ MIT — see [LICENSE](LICENSE).
 Email: [mfarooqsgafee333@gmail.com](mailto:mfarooqsgafee333@gmail.com)
 LinkedIn: [linkedin.com/in/muhammadfarooqshafi](https://www.linkedin.com/in/muhammadfarooqshafi/)
 Facebook: [facebook.com/profile.php?id=61575167257313](https://www.facebook.com/profile.php?id=61575167257313)
-GitHub: `<YOUR_GITHUB_URL>`
+GitHub: https://github.com/Muhammad-Farooq13
